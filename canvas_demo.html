@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Game Template</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+	<style type="text/css">	
+		body
+		{
+			background-color: aqua;
+		}
+
+		#myCanvas
+		{
+			border:1px dotted #555;
+			width: 400px;
+			height: 400px;
+		}
+	</style>
+</head>
+<body>
+	<canvas id="myCanvas" width="400" height="400"></canvas>
+	<img src="darker_checker.png" id="checker" hidden>
+	<script type="text/javascript">
+		var canvas = document.getElementById("myCanvas");
+		var c = canvas.getContext("2d");
+		var mouseY = 0;
+		var mouseX = 0;
+
+		/*
+		var Bullet = function(x,y){
+			this.x = x;
+			this.y = y;
+		}
+
+		Bullet.prototype.update = function(){
+			c.beginPath();
+			//960, -280
+			c.moveTo(this.x, this.y+10);
+			c.lineTo(this.x, this.y);
+			this.y -= 10;
+			c.stroke();
+		}
+			
+		function fire(evt){
+			bullets.push(new Bullet(xPosition, yPosition));
+		}*/
+
+		window.onload = function()
+		{
+			//document.addEventListener('keydown', keyPressed);
+			//document.addEventListener('keyup', keyReleased);
+			//document.addEventListener('mousedown', fire);
+			document.addEventListener("mousemove", mouseMoveHandler, false);
+		}
+
+		function mouseMoveHandler(e) {
+			var rect = canvas.getBoundingClientRect();
+			mouseX = e.clientX - rect.left
+    		mouseY = e.clientY - rect.top
+			//mouseX = e.clientX - canvas.offsetLeft;
+			//mouseY = e.clientY - canvas.offsetTop;
+			//mouseY = e.clientY - c.offsetTop;
+		}
+		
+		function draw()
+		{
+			//c.clearRect(0, 0, myCanvas.width, myCanvas.height);
+
+			//Draw
+			c.drawImage(document.getElementById("checker"), mouseX, mouseY, 20, 20);
+			//console.log(mouseX);
+
+			window.requestAnimationFrame(draw);
+		}
+
+		window.requestAnimationFrame(draw);
+
+	</script>
+
+</body>
+
+</html>
