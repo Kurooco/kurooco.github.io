@@ -67,11 +67,12 @@
 
 		Key.prototype.update = function()
 		{
+			var width = document.getElementById(this.img).getBoundingClientRect().width;
+			var height = document.getElementById(this.img).getBoundingClientRect().height;
 			if(this.is_playing)
-				c.drawImage(document.getElementById(this.img), this.x, this.y, 50, 50);
+				c.drawImage(document.getElementById(this.img), this.x, this.y, width, height*1.1);
 			else
 				c.drawImage(document.getElementById(this.img), this.x, this.y);
-			this.is_playing = false
 		}
 
 		Key.prototype.is_collision = function(x, y)
@@ -81,14 +82,6 @@
 			var height = document.getElementById(this.img).getBoundingClientRect().height;
 			var x_condition = (x < this.x+width && x > this.x)
 			var y_condition = (y < this.y+height && y > this.y)
-			console.log(x);
-			console.log(y);
-			console.log(this.x);
-			console.log(this.y);
-			console.log(width);
-			console.log(height);
-			console.log(x_condition);
-			console.log(y_condition);
 			return x_condition && y_condition
 		}
 
@@ -105,9 +98,6 @@
 			var rect = canvas.getBoundingClientRect();
 			mouseX = e.clientX - rect.left
     		mouseY = e.clientY - rect.top
-			//mouseX = e.clientX - canvas.offsetLeft;
-			//mouseY = e.clientY - canvas.offsetTop;
-			//mouseY = e.clientY - c.offsetTop;
 		}
 		
 
@@ -137,25 +127,16 @@
 		// create Oscillator node
 		const oscillator = audioCtx.createOscillator();
 		oscillator.connect(audioCtx.destination);
-		oscillator.type = "sine";
+		oscillator.type = "square";
+		oscillator_started = false;
 
 		function play_note()
 		{
-			//var note = new Audio("c_piano.wav");
-			//note.play()
-			/*for(var i = 0; i < keys.length; i++)
+			if(!oscillator_started)
 			{
-				k = keys[i];
-				if(k.is_collision(mouseX, mouseY))
-				{
-					var note = new Audio("c_piano.wav");
-					note.mozPreservesPitch = false;
-					note.playbackRate = k.sound;
-					note.play()
-					k.is_playing = true;
-					break;
-				}
-			};*/
+				oscillator.start();
+				oscillator_started = true;
+			}
 			for(var i = 0; i < keys.length; i++)
 			{
 				k = keys[i];
@@ -163,6 +144,7 @@
 				{
 					oscillator.frequency.setValueAtTime(k.sound, audioCtx.currentTime); // value in hertz
 					k.is_playing = true;
+					oscillator.connect(audioCtx.destination);
 					break;
 				}
 			};
@@ -171,7 +153,10 @@
 
 		function stop_note()
 		{
-			oscillator.disconnect(audioCtx);
+			oscillator.disconnect();
+			keys.forEach(k => {
+				k.is_playing = false
+			});
 		}
 
 		function draw()
