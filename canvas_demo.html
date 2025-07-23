@@ -7,23 +7,30 @@
 		body
 		{
 			background-color: aqua;
+			height:2000px;
 		}
 
 		#myCanvas
 		{
 			border:1px dotted #555;
-			width: 400px;
+			width: 800px;
 			height: 400px;
+		}
+
+		.hidden-image
+		{
+			opacity: 0;
+			/*display: none;*/
 		}
 	</style>
 </head>
 <body>
-	<canvas id="myCanvas" width="400" height="400"></canvas>
-	<img src="darker_checker.png" id="checker" hidden>
-	<img src="left_white.png" id="checker" hidden>
-	<img src="right_white.png" id="checker" hidden>
-	<img src="middle_white.png" id="checker" hidden>
-	<img src="black.png" id="checker" hidden>
+	<canvas id="myCanvas" width="800" height="400"></canvas>
+	<img src="darker_checker.png" id="checker" class="hidden-image">
+	<img src="left_white.png" id="lw" class="hidden-image">
+	<img src="right_white.png" id="rw" class="hidden-image">
+	<img src="middle_white.png" id="mw" class="hidden-image">
+	<img src="black.png" id="bl" class="hidden-image">
 	<script type="text/javascript">
 		var canvas = document.getElementById("myCanvas");
 		var c = canvas.getContext("2d");
@@ -49,11 +56,48 @@
 			bullets.push(new Bullet(xPosition, yPosition));
 		}*/
 
+		var Key = function(x, y, img, sound)
+		{
+			this.x = x;
+			this.y = y;
+			this.img = img;
+			this.sound = sound;
+			this.is_playing = false
+		}
+
+		Key.prototype.update = function()
+		{
+			if(this.is_playing)
+				c.drawImage(document.getElementById(this.img), this.x, this.y, 50, 50);
+			else
+				c.drawImage(document.getElementById(this.img), this.x, this.y);
+			this.is_playing = false
+		}
+
+		Key.prototype.is_collision = function(x, y)
+		{
+			console.log("inside");
+			var width = document.getElementById(this.img).getBoundingClientRect().width;
+			var height = document.getElementById(this.img).getBoundingClientRect().height;
+			var x_condition = (x < this.x+width && x > this.x)
+			var y_condition = (y < this.y+height && y > this.y)
+			console.log(x);
+			console.log(y);
+			console.log(this.x);
+			console.log(this.y);
+			console.log(width);
+			console.log(height);
+			console.log(x_condition);
+			console.log(y_condition);
+			return x_condition && y_condition
+		}
+
 		window.onload = function()
 		{
 			//document.addEventListener('keydown', keyPressed);
 			//document.addEventListener('keyup', keyReleased);
-			//document.addEventListener('mousedown', fire);
+			document.addEventListener('mousedown', play_note);
+			document.addEventListener('mouseup', stop_note);
 			document.addEventListener("mousemove", mouseMoveHandler, false);
 		}
 
@@ -66,13 +110,79 @@
 			//mouseY = e.clientY - c.offsetTop;
 		}
 		
+
+		var key_order = ["lw", "bl", "mw", "bl", "rw", "lw", "bl", "mw", "bl", "mw", "bl", "rw"]
+		//var key_order = ["bl"];
+		var keys = [];
+		var offset = 0;
+		const WHITE_KEY_SEP = 85;
+		const BLACK_KEY_SEP = 51;
+		for(var i = 0; i < key_order.length; i++)
+		{
+			if(key_order[i] == "bl")
+			{
+				offset += BLACK_KEY_SEP;
+				keys.unshift(new Key(offset, 5, key_order[i], i*20));
+				offset -= BLACK_KEY_SEP;
+			}
+			else
+			{
+				offset += WHITE_KEY_SEP;
+				keys.push(new Key(offset, 5, key_order[i], i*20));
+			}
+		}
+
+		// create web audio api context
+		const audioCtx = new AudioContext();
+		// create Oscillator node
+		const oscillator = audioCtx.createOscillator();
+		oscillator.connect(audioCtx.destination);
+		oscillator.type = "sine";
+
+		function play_note()
+		{
+			//var note = new Audio("c_piano.wav");
+			//note.play()
+			/*for(var i = 0; i < keys.length; i++)
+			{
+				k = keys[i];
+				if(k.is_collision(mouseX, mouseY))
+				{
+					var note = new Audio("c_piano.wav");
+					note.mozPreservesPitch = false;
+					note.playbackRate = k.sound;
+					note.play()
+					k.is_playing = true;
+					break;
+				}
+			};*/
+			for(var i = 0; i < keys.length; i++)
+			{
+				k = keys[i];
+				if(k.is_collision(mouseX, mouseY))
+				{
+					oscillator.frequency.setValueAtTime(k.sound, audioCtx.currentTime); // value in hertz
+					k.is_playing = true;
+					break;
+				}
+			};
+			
+		}
+
+		function stop_note()
+		{
+			oscillator.disconnect(audioCtx);
+		}
+
 		function draw()
 		{
-			//c.clearRect(0, 0, myCanvas.width, myCanvas.height);
+			c.clearRect(0, 0, myCanvas.width, myCanvas.height);
 
 			//Draw
 			c.drawImage(document.getElementById("checker"), mouseX, mouseY, 20, 20);
-			//console.log(mouseX);
+			keys.forEach(element => {
+				element.update()
+			});
 
 			window.requestAnimationFrame(draw);
 		}
