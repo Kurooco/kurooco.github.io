@@ -49,7 +49,7 @@
         <iframe frameborder="0" src="https://itch.io/embed/3448009?border_width=3&amp;bg_color=36254e&amp;fg_color=ff3535&amp;link_color=fc0000&amp;border_color=a400a6" width="556" height="171"><a href="https://kurooco.itch.io/save-the-fortress">Save The Fortress by Kurooco</a></iframe>
         <br>
         <hr>
-        <p>I like to play the piano and make music with GarageBand!</p>
+        <p>I like to play the piano and make music with GarageBand! (Careful, the keyboard is loud.)</p>
         <canvas id="myCanvas" width="700" height="400"></canvas>
         <img src="darker_checker.png" id="checker" class="hidden-image">
         <img src="left_white.png" id="lw" class="hidden-image">
@@ -84,7 +84,6 @@
 
             Key.prototype.is_collision = function(x, y)
             {
-                console.log("inside");
                 var width = document.getElementById(this.img).getBoundingClientRect().width;
                 var height = document.getElementById(this.img).getBoundingClientRect().height;
                 var x_condition = (x < this.x+width && x > this.x)
@@ -129,7 +128,6 @@
                     offset += WHITE_KEY_SEP;
                     keys.unshift(new Key(offset, 5, key_order[i], note));
                 }
-                console.log(note);
                 note = note*Math.pow(2, 1/12.0);
             }
 
@@ -138,14 +136,19 @@
             // create Oscillator node
             const oscillator = audioCtx.createOscillator();
             oscillator.connect(audioCtx.destination);
-            oscillator.type = "square";
+            var gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.type = "sine";
             oscillator_started = false;
 
             function play_note()
             {
                 if(!oscillator_started)
                 {
-                    oscillator.start();
+                    gainNode.gain.value = .01;
+                    console.log(gainNode.gain.value)
+                    //oscillator.start();
                     oscillator_started = true;
                 }
                 for(var i = keys.length-1; i >= 0; i--)
@@ -155,7 +158,7 @@
                     {
                         oscillator.frequency.setValueAtTime(k.sound, audioCtx.currentTime); // value in hertz
                         k.is_playing = true;
-                        oscillator.connect(audioCtx.destination);
+                        //oscillator.connect(audioCtx.destination);
                         break;
                     }
                 };
