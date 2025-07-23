@@ -73,6 +73,8 @@
 			//document.addEventListener('keyup', keyReleased);
 			document.addEventListener('mousedown', play_note);
 			document.addEventListener('mouseup', stop_note);
+			document.addEventListener('touchstart', play_note);
+			document.addEventListener('touchend', stop_note);
 			document.addEventListener("mousemove", mouseMoveHandler, false);
 		}
 
