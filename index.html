@@ -25,6 +25,19 @@
             border-radius: 50px;
             padding:20px;
         }
+
+        #myCanvas
+		{
+			border:0px;
+			width: 700px;
+			height: 400px;
+		}
+
+		.hidden-image
+		{
+			opacity: 0;
+			/*display: none;*/
+		}
     </style>
 </head>
 <body>
@@ -37,9 +50,139 @@
         <br>
         <hr>
         <p>I like to play the piano and make music with Garage Band!</p>
-        <canvas>
+        <canvas id="myCanvas" width="700" height="400"></canvas>
+        <img src="darker_checker.png" id="checker" class="hidden-image">
+        <img src="left_white.png" id="lw" class="hidden-image">
+        <img src="right_white.png" id="rw" class="hidden-image">
+        <img src="middle_white.png" id="mw" class="hidden-image">
+        <img src="wh.png" id="wh" class="hidden-image">
+        <img src="black.png" id="bl" class="hidden-image">
+        <script type="text/javascript">
+            var canvas = document.getElementById("myCanvas");
+            var c = canvas.getContext("2d");
+            var mouseY = 0;
+            var mouseX = 0;
+
+            var Key = function(x, y, img, sound)
+            {
+                this.x = x;
+                this.y = y;
+                this.img = img;
+                this.sound = sound;
+                this.is_playing = false
+            }
+
+            Key.prototype.update = function()
+            {
+                var width = document.getElementById(this.img).getBoundingClientRect().width;
+                var height = document.getElementById(this.img).getBoundingClientRect().height;
+                if(this.is_playing)
+                    c.drawImage(document.getElementById(this.img), this.x, this.y, width, height*1.1);
+                else
+                    c.drawImage(document.getElementById(this.img), this.x, this.y);
+            }
+
+            Key.prototype.is_collision = function(x, y)
+            {
+                console.log("inside");
+                var width = document.getElementById(this.img).getBoundingClientRect().width;
+                var height = document.getElementById(this.img).getBoundingClientRect().height;
+                var x_condition = (x < this.x+width && x > this.x)
+                var y_condition = (y < this.y+height && y > this.y)
+                return x_condition && y_condition
+            }
+
+            window.onload = function()
+            {
+                //document.addEventListener('keydown', keyPressed);
+                //document.addEventListener('keyup', keyReleased);
+                document.addEventListener('mousedown', play_note);
+                document.addEventListener('mouseup', stop_note);
+                document.addEventListener("mousemove", mouseMoveHandler, false);
+            }
+
+            function mouseMoveHandler(e) {
+                var rect = canvas.getBoundingClientRect();
+                mouseX = e.clientX - rect.left
+                mouseY = e.clientY - rect.top
+            }
             
-        </canvas>
+            // Create keys
+            var key_order = ["wh", "bl", "wh", "bl", "wh", "wh", "bl", "wh", "bl", "wh", "bl", "wh"]
+            var keys = [];
+            const WHITE_KEY_SEP = 85;
+            const BLACK_KEY_SEP = 51;
+            var offset = -WHITE_KEY_SEP;
+            var note = 261;
+            for(var i = 0; i < key_order.length; i++)
+            {
+                if(key_order[i] == "bl")
+                {
+                    offset += BLACK_KEY_SEP;
+                    keys.push(new Key(offset, 5, key_order[i], note));
+                    offset -= BLACK_KEY_SEP;
+                }
+                else
+                {
+                    offset += WHITE_KEY_SEP;
+                    keys.unshift(new Key(offset, 5, key_order[i], note));
+                }
+                console.log(note);
+                note = note*Math.pow(2, 1/12.0);
+            }
+
+            // create web audio api context
+            const audioCtx = new AudioContext();
+            // create Oscillator node
+            const oscillator = audioCtx.createOscillator();
+            oscillator.connect(audioCtx.destination);
+            oscillator.type = "square";
+            oscillator_started = false;
+
+            function play_note()
+            {
+                if(!oscillator_started)
+                {
+                    oscillator.start();
+                    oscillator_started = true;
+                }
+                for(var i = keys.length-1; i >= 0; i--)
+                {
+                    k = keys[i];
+                    if(k.is_collision(mouseX, mouseY))
+                    {
+                        oscillator.frequency.setValueAtTime(k.sound, audioCtx.currentTime); // value in hertz
+                        k.is_playing = true;
+                        oscillator.connect(audioCtx.destination);
+                        break;
+                    }
+                };
+                
+            }
+
+            function stop_note()
+            {
+                oscillator.disconnect();
+                keys.forEach(k => {
+                    k.is_playing = false
+                });
+            }
+
+            function draw()
+            {
+                c.clearRect(0, 0, myCanvas.width, myCanvas.height);
+
+                //Draw
+                keys.forEach(element => {
+                    element.update()
+                });
+
+                window.requestAnimationFrame(draw);
+            }
+
+            window.requestAnimationFrame(draw);
+
+        </script>
     </div>
 </body>
 </html>
