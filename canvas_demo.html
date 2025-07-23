@@ -30,6 +30,7 @@
 	<img src="left_white.png" id="lw" class="hidden-image">
 	<img src="right_white.png" id="rw" class="hidden-image">
 	<img src="middle_white.png" id="mw" class="hidden-image">
+	<img src="wh.png" id="wh" class="hidden-image">
 	<img src="black.png" id="bl" class="hidden-image">
 	<script type="text/javascript">
 		var canvas = document.getElementById("myCanvas");
@@ -101,25 +102,28 @@
 		}
 		
 
-		var key_order = ["lw", "bl", "mw", "bl", "rw", "lw", "bl", "mw", "bl", "mw", "bl", "rw"]
+		var key_order = ["wh", "bl", "wh", "bl", "wh", "wh", "bl", "wh", "bl", "wh", "bl", "wh"]
 		//var key_order = ["bl"];
 		var keys = [];
 		var offset = 0;
 		const WHITE_KEY_SEP = 85;
 		const BLACK_KEY_SEP = 51;
+		var note = 261;
 		for(var i = 0; i < key_order.length; i++)
 		{
 			if(key_order[i] == "bl")
 			{
 				offset += BLACK_KEY_SEP;
-				keys.unshift(new Key(offset, 5, key_order[i], i*20));
+				keys.push(new Key(offset, 5, key_order[i], note));
 				offset -= BLACK_KEY_SEP;
 			}
 			else
 			{
 				offset += WHITE_KEY_SEP;
-				keys.push(new Key(offset, 5, key_order[i], i*20));
+				keys.unshift(new Key(offset, 5, key_order[i], note));
 			}
+			console.log(note);
+			note = note*Math.pow(2, 1/12.0);
 		}
 
 		// create web audio api context
@@ -137,7 +141,7 @@
 				oscillator.start();
 				oscillator_started = true;
 			}
-			for(var i = 0; i < keys.length; i++)
+			for(var i = keys.length-1; i >= 0; i--)
 			{
 				k = keys[i];
 				if(k.is_collision(mouseX, mouseY))
