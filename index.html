@@ -135,7 +135,7 @@
             const audioCtx = new AudioContext();
             // create Oscillator node
             const oscillator = audioCtx.createOscillator();
-            oscillator.connect(audioCtx.destination);
+            //oscillator.connect(audioCtx.destination);
             var gainNode = audioCtx.createGain();
             oscillator.connect(gainNode);
             gainNode.connect(audioCtx.destination);
@@ -146,9 +146,8 @@
             {
                 if(!oscillator_started)
                 {
-                    gainNode.gain.value = .01;
-                    console.log(gainNode.gain.value)
-                    //oscillator.start();
+                    gainNode.gain.setValueAtTime(.04, audioCtx.currentTime);
+                    oscillator.start();             
                     oscillator_started = true;
                 }
                 for(var i = keys.length-1; i >= 0; i--)
@@ -158,7 +157,7 @@
                     {
                         oscillator.frequency.setValueAtTime(k.sound, audioCtx.currentTime); // value in hertz
                         k.is_playing = true;
-                        //oscillator.connect(audioCtx.destination);
+                        gainNode.connect(audioCtx.destination);       
                         break;
                     }
                 };
@@ -167,7 +166,7 @@
 
             function stop_note()
             {
-                oscillator.disconnect();
+                gainNode.disconnect();
                 keys.forEach(k => {
                     k.is_playing = false
                 });
